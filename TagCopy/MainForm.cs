@@ -73,7 +73,7 @@ namespace TagCopy
 
         private string NewDownloadLink(string latestVersion)
         {
-            return string.Format("https://github.com/hellzerg/tagcopy/releases/download/{0}/TagCopy-{0}.exe", latestVersion);
+            return string.Format("https://github.com/hellzerg/tagcopy/releases/download/{0}/TagCopy.exe", latestVersion);
         }
 
         private void CheckForUpdate()
