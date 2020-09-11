@@ -231,6 +231,7 @@ namespace TagCopy
         private void Form1_Load(object sender, EventArgs e)
         {
             showInfo("Σύρετε αρχεία MP3/FLAC...", true);
+            this.Text = "TagCopy " + Program.GetCurrentVersionToString();
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
@@ -422,11 +423,6 @@ namespace TagCopy
             messageBar.Visible = true;
         }
 
-        private void HideMessage()
-        {
-            messageBar.Visible = false;
-        }
-
         private void CopyTags()
         {
             flacTrack.Tag.AlbumArtists = mp3Track.Tag.AlbumArtists;
@@ -443,8 +439,6 @@ namespace TagCopy
             }
             else
             {
-                // TODO: search artwork with performers and artists
-
                 tempImageFile = Path.Combine(TEMP_PATH, Guid.NewGuid().ToString());
                 picArt.Image.Save(tempImageFile, System.Drawing.Imaging.ImageFormat.Png);
 
