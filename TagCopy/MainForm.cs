@@ -24,10 +24,11 @@ namespace TagCopy
 
         const string ERROR_LOG = @"\TagCopy.errors";
 
-        const string LASTFM_API_KEY = "433243b12925fbb0e6095eed036087a3";
-        const string LASTFM_URL = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=";
+        //const string LASTFM_API_KEY = "433243b12925fbb0e6095eed036087a3";
+        //const string LASTFM_URL = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=";
 
         //const string SPOTIFY_URL = "https://shadowconf.eu:54548/artwork/";
+        const string DISCOGS_URL = "https://shadowconf.eu:54548/discogs/";
 
         string MP3Prototype = string.Empty;
         string FLACToEdit = string.Empty;
@@ -44,6 +45,11 @@ namespace TagCopy
 
         const string MP3_EXTENSION = ".mp3";
         const string FLAC_EXTENSION = ".flac";
+        const string ERRORS_EXTENSION = ".errors";
+        const string JPG_EXTENSION = ".jpg";
+        const string JPG_EXTENSION_2 = ".jpeg";
+        const string BMP_EXTENSION = ".bmp";
+        const string PNG_EXTENSION = ".png";
 
         string TEMP_PATH = Path.GetTempPath() + @"\TagCopy";
 
@@ -62,8 +68,6 @@ namespace TagCopy
             InitWebClient();
             InitDialog();
             InitTemp();
-
-            CheckForUpdate();
         }
 
         private string NewVersionMessage(string latestVersion)
@@ -158,7 +162,8 @@ namespace TagCopy
             {
                 foreach (string f in Directory.GetFiles(TEMP_PATH))
                 {
-                    if (f.EndsWith(".errors")) continue;
+                    if (f.EndsWith(ERRORS_EXTENSION)) continue;
+
                     System.IO.File.Delete(f);
                 }
             }
@@ -194,24 +199,45 @@ namespace TagCopy
             TagLib.Id3v2.Tag.ForceDefaultEncoding = true;
         }
 
-        private byte[] GetArtworkFromLastFM(string artist, string track)
+        private byte[] GetArtworkFromDiscogs(string term)
         {
-            string LINK = string.Format("{0}{1}&artist={2}&track={3}&format=json", LASTFM_URL, LASTFM_API_KEY, artist, track);
-            APIResult r = JsonConvert.DeserializeObject<APIResult>(client.DownloadString(LINK));
+            string LINK = string.Format("{0}{1}", DISCOGS_URL, term);
+            string imageUrl = client.DownloadString(LINK);
 
-            if (r != null)
-            {
-                if (r.Track != null)
-                {
-                    if (r.Track.Album != null)
-                    {
-                        return client.DownloadData(r.Track.Album.Image[3].Text.ToString());
-                    }
-                }
-            } 
+            return client.DownloadData(imageUrl);
 
-            return null;
+            //return null;
+
+            //using (MemoryStream ms = new MemoryStream())
+            //{
+            //    stream.CopyTo(ms);
+            //    return ms.ToArray();
+            //}
+
+            //using (Stream stream = client.OpenRead(imageUrl))
+            //{
+                
+            //}
         }
+
+        //private byte[] GetArtworkFromLastFM(string artist, string track)
+        //{
+        //    string LINK = string.Format("{0}{1}&artist={2}&track={3}&format=json", LASTFM_URL, LASTFM_API_KEY, artist, track);
+        //    APIResult r = JsonConvert.DeserializeObject<APIResult>(client.DownloadString(LINK));
+
+        //    if (r != null)
+        //    {
+        //        if (r.Track != null)
+        //        {
+        //            if (r.Track.Album != null)
+        //            {
+        //                return client.DownloadData(r.Track.Album.Image[3].Text.ToString());
+        //            }
+        //        }
+        //    } 
+
+        //    return null;
+        //}
 
         //private byte[] GetArtworkFromSpotify(string artist, string album)
         //{
@@ -232,6 +258,9 @@ namespace TagCopy
         {
             showInfo("Σύρετε αρχεία MP3/FLAC...", true);
             this.Text = "TagCopy " + Program.GetCurrentVersionToString();
+
+            CheckForUpdate();
+            CleanTemp();
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
@@ -311,6 +340,16 @@ namespace TagCopy
 
                     ShowMP3Tags();
                 }
+                else if (file.ToLowerInvariant().EndsWith(JPG_EXTENSION) ||
+                    file.ToLowerInvariant().EndsWith(JPG_EXTENSION_2) ||
+                    file.ToLowerInvariant().EndsWith(PNG_EXTENSION) ||
+                    file.ToLowerInvariant().EndsWith(BMP_EXTENSION))
+                {
+                    picArt.Image = new Bitmap(file);
+                    tempImageFile = file;
+
+                    return;
+                }
                 else
                 {
                     ShowError("Μη έγκυρο αρχείο");
@@ -325,6 +364,9 @@ namespace TagCopy
 
         private void LoadImageBytesToUI(byte[] image)
         {
+            tempImageFile = Path.Combine(TEMP_PATH, Guid.NewGuid().ToString());
+            System.IO.File.WriteAllBytes(tempImageFile, image);
+
             using (MemoryStream stream = new MemoryStream(image))
             {
                 picArt.Image = new Bitmap(stream);
@@ -439,19 +481,22 @@ namespace TagCopy
             }
             else
             {
-                tempImageFile = Path.Combine(TEMP_PATH, Guid.NewGuid().ToString());
-                picArt.Image.Save(tempImageFile, System.Drawing.Imaging.ImageFormat.Png);
-
-                TagLib.Id3v2.AttachmentFrame picture = new TagLib.Id3v2.AttachmentFrame
+                if (!string.IsNullOrEmpty(tempImageFile))
                 {
-                    Type = PictureType.FrontCover,
-                    Description = "Cover",
-                    MimeType = System.Net.Mime.MediaTypeNames.Image.Jpeg,
-                    Data = System.IO.File.ReadAllBytes(tempImageFile),
-                    TextEncoding = StringType.Latin1
-                };
+                    if (System.IO.File.Exists(tempImageFile))
+                    {
+                        TagLib.Id3v2.AttachmentFrame picture = new TagLib.Id3v2.AttachmentFrame
+                        {
+                            Type = PictureType.FrontCover,
+                            Description = "Cover",
+                            MimeType = System.Net.Mime.MediaTypeNames.Image.Jpeg,
+                            Data = System.IO.File.ReadAllBytes(tempImageFile),
+                            TextEncoding = StringType.Latin1
+                        };
 
-                flacTrack.Tag.Pictures = new IPicture[1] { picture };
+                        flacTrack.Tag.Pictures = new IPicture[1] { picture };
+                    }
+                }
             }
 
             // Rating-related code, buggy in FLAC
@@ -466,7 +511,9 @@ namespace TagCopy
 
             flacTrack.Save();
 
-            Microsoft.VisualBasic.FileSystem.Rename(flacTrack.FileAbstraction.Name, mp3Track.FileAbstraction.Name.Replace(MP3_EXTENSION, FLAC_EXTENSION));
+            Microsoft.VisualBasic.FileSystem.Rename(flacTrack.FileAbstraction.Name, Path.Combine(Path.GetDirectoryName(flacTrack.FileAbstraction.Name), Path.GetFileName(mp3Track.FileAbstraction.Name).Replace(MP3_EXTENSION, FLAC_EXTENSION)));
+
+            tempImageFile = string.Empty;
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
@@ -512,51 +559,87 @@ namespace TagCopy
         {
             RenderWorking();
 
-            bool lastFMFoundWithArtist = false;
-            bool lastFMFoundWithContrib = false;
+            //bool lastFMFoundWithArtist = false;
+            //bool lastFMFoundWithContrib = false;
             //bool spotifyFound = false;
+            bool discogsFoundContrib = false;
+            bool discogsFoundOriginal = false;
 
             byte[] imageData;
 
-            // try with contributing artist
             try
             {
-                imageData = GetArtworkFromLastFM(mp3Track.Tag.FirstPerformer, mp3Track.Tag.Title);
+                imageData = GetArtworkFromDiscogs(mp3Track.Tag.FirstPerformer + " - " + mp3Track.Tag.Title);
                 LoadImageBytesToUI(imageData);
-                lastFMFoundWithContrib = true;
-                ShowMessage("LastFM: Βρέθηκε artwork");
+                discogsFoundContrib = true;
+                ShowMessage("Discogs: Βρέθηκε artwork");
             }
             catch (Exception err)
             {
-                LogError(err, "SearchButton.Click.LastFM");
-                lastFMFoundWithContrib = false;
+                LogError(err, "SearchButton.Click.Discogs");
+                discogsFoundContrib = false;
             }
+
+            if (!discogsFoundContrib)
+            {
+                try
+                {
+                    imageData = GetArtworkFromDiscogs(mp3Track.Tag.FirstAlbumArtist + " - " + mp3Track.Tag.Title);
+                    LoadImageBytesToUI(imageData);
+                    discogsFoundOriginal = true;
+                    ShowMessage("Discogs: Βρέθηκε artwork");
+                }
+                catch (Exception err)
+                {
+                    LogError(err, "SearchButton.Click.Discogs");
+                    discogsFoundOriginal = false;
+                }
+            }
+
+            if (!discogsFoundContrib && !discogsFoundOriginal)
+            {
+                ShowError("Δεν βρέθηκε artwork");
+            }
+
+            RenderFinished();
+
+            //try with contributing artist
+            //try
+            //{
+            //    imageData = GetArtworkFromLastFM(mp3Track.Tag.FirstPerformer, mp3Track.Tag.Title);
+            //    LoadImageBytesToUI(imageData);
+            //    lastFMFoundWithContrib = true;
+            //    ShowMessage("LastFM: Βρέθηκε artwork");
+            //}
+            //catch (Exception err)
+            //{
+            //    LogError(err, "SearchButton.Click.LastFM");
+            //    lastFMFoundWithContrib = false;
+            //}
 
             // try with original artist
-            if (!lastFMFoundWithContrib)
-            {
-                if (!string.IsNullOrEmpty(mp3Track.Tag.FirstAlbumArtist))
-                {
-                    try
-                    {
-                        imageData = GetArtworkFromLastFM(mp3Track.Tag.FirstAlbumArtist, mp3Track.Tag.Title);
-                        LoadImageBytesToUI(imageData);
-                        lastFMFoundWithArtist = true;
-                        ShowMessage("LastFM: Βρέθηκε artwork");
-                    }
-                    catch (Exception err)
-                    {
-                        LogError(err, "SearchButton.Click.LastFM");
-                        lastFMFoundWithArtist = false;
-                    }
-                }
-                else
-                {
-                    lastFMFoundWithArtist = false;
-                }
-            }
-
-            // TODO: try with discogs...
+            //if (!lastFMFoundWithContrib)
+            //{
+            //    if (!string.IsNullOrEmpty(mp3Track.Tag.FirstAlbumArtist))
+            //    {
+            //        try
+            //        {
+            //            imageData = GetArtworkFromLastFM(mp3Track.Tag.FirstAlbumArtist, mp3Track.Tag.Title);
+            //            LoadImageBytesToUI(imageData);
+            //            lastFMFoundWithArtist = true;
+            //            ShowMessage("LastFM: Βρέθηκε artwork");
+            //        }
+            //        catch (Exception err)
+            //        {
+            //            LogError(err, "SearchButton.Click.LastFM");
+            //            lastFMFoundWithArtist = false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        lastFMFoundWithArtist = false;
+            //    }
+            //}
 
             // try with spotify - buggy
 
@@ -576,13 +659,6 @@ namespace TagCopy
             //        spotifyFound = false;
             //    }
             //}
-
-            if (!lastFMFoundWithArtist && !lastFMFoundWithContrib)
-            {
-                ShowError("Δεν βρέθηκε artwork");
-            }
-
-            RenderFinished();
         }
 
         private void btnManual_Click(object sender, EventArgs e)
@@ -590,6 +666,7 @@ namespace TagCopy
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 picArt.Image = new Bitmap(dialog.FileName);
+                tempImageFile = dialog.FileName;
             }   
         }
 
@@ -600,7 +677,7 @@ namespace TagCopy
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CleanTemp();
+            
         }
 
         private void pictureBox3_Click(object sender, EventArgs e)

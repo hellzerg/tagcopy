@@ -6,7 +6,7 @@ Simple tool for copying MP3 tags to FLAC.
 
 * Copy music tags from MP3 to FLAC
 * Batch-delete MP3 tags
-* Automatic artwork fetching
+* Automatic artwork fetching (Discogs)
 
 ## Downloads: ##
 https://github.com/hellzerg/tagcopy/releases
@@ -24,5 +24,5 @@ https://github.com/hellzerg/tagcopy/blob/master/CHANGELOG.md
 
 ## Details: ##
 
-* Latest version: 1.1
-* Released: September 11, 2020
+* Latest version: 1.2
+* Released: September 12, 2020
