@@ -55,6 +55,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.messageBar = new TagCopy.MessageItem();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
+            this.imageList = new System.Windows.Forms.ListBox();
+            this.panelImages = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.panel1.SuspendLayout();
             this.panelTags.SuspendLayout();
@@ -62,6 +64,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.picArt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
+            this.panelImages.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -282,6 +285,7 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.panelImages);
             this.panel2.Controls.Add(this.btnSearch);
             this.panel2.Controls.Add(this.btnManual);
             this.panel2.Controls.Add(this.picArt);
@@ -292,7 +296,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Right;
             this.panel2.Location = new System.Drawing.Point(422, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(300, 445);
+            this.panel2.Size = new System.Drawing.Size(351, 445);
             this.panel2.TabIndex = 85;
             // 
             // btnSearch
@@ -324,7 +328,7 @@
             this.btnManual.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnManual.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnManual.ForeColor = System.Drawing.Color.White;
-            this.btnManual.Location = new System.Drawing.Point(210, 174);
+            this.btnManual.Location = new System.Drawing.Point(175, 175);
             this.btnManual.Margin = new System.Windows.Forms.Padding(2);
             this.btnManual.Name = "btnManual";
             this.btnManual.Size = new System.Drawing.Size(41, 36);
@@ -351,9 +355,9 @@
             this.label3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label3.Font = new System.Drawing.Font("Segoe UI Semibold", 14F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.White;
-            this.label3.Location = new System.Drawing.Point(0, 154);
+            this.label3.Location = new System.Drawing.Point(0, 151);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(300, 1);
+            this.label3.Size = new System.Drawing.Size(353, 1);
             this.label3.TabIndex = 12;
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -362,7 +366,7 @@
             this.txtFlac.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFlac.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtFlac.ForeColor = System.Drawing.Color.White;
-            this.txtFlac.Location = new System.Drawing.Point(3, 121);
+            this.txtFlac.Location = new System.Drawing.Point(54, 121);
             this.txtFlac.Name = "txtFlac";
             this.txtFlac.Size = new System.Drawing.Size(285, 32);
             this.txtFlac.TabIndex = 11;
@@ -372,7 +376,7 @@
             // 
             this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(115, 33);
+            this.pictureBox1.Location = new System.Drawing.Point(166, 33);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(76, 76);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -386,7 +390,7 @@
             this.label2.ForeColor = System.Drawing.Color.DodgerBlue;
             this.label2.Location = new System.Drawing.Point(0, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(300, 30);
+            this.label2.Size = new System.Drawing.Size(351, 30);
             this.label2.TabIndex = 9;
             this.label2.Text = "Αρχείο FLAC";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -400,7 +404,7 @@
             this.messageBar.Location = new System.Drawing.Point(0, 445);
             this.messageBar.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.messageBar.Name = "messageBar";
-            this.messageBar.Size = new System.Drawing.Size(722, 39);
+            this.messageBar.Size = new System.Drawing.Size(773, 39);
             this.messageBar.TabIndex = 83;
             this.messageBar.Visible = false;
             // 
@@ -416,13 +420,36 @@
             this.pictureBox3.TabStop = false;
             this.pictureBox3.Click += new System.EventHandler(this.pictureBox3_Click);
             // 
+            // imageList
+            // 
+            this.imageList.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(44)))), ((int)(((byte)(44)))));
+            this.imageList.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.imageList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.imageList.ForeColor = System.Drawing.Color.Silver;
+            this.imageList.FormattingEnabled = true;
+            this.imageList.ItemHeight = 21;
+            this.imageList.Location = new System.Drawing.Point(0, 0);
+            this.imageList.Name = "imageList";
+            this.imageList.Size = new System.Drawing.Size(73, 200);
+            this.imageList.TabIndex = 88;
+            this.imageList.SelectedIndexChanged += new System.EventHandler(this.imageList_SelectedIndexChanged);
+            // 
+            // panelImages
+            // 
+            this.panelImages.Controls.Add(this.imageList);
+            this.panelImages.Location = new System.Drawing.Point(257, 219);
+            this.panelImages.Name = "panelImages";
+            this.panelImages.Size = new System.Drawing.Size(73, 200);
+            this.panelImages.TabIndex = 90;
+            this.panelImages.Visible = false;
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
-            this.ClientSize = new System.Drawing.Size(722, 484);
+            this.ClientSize = new System.Drawing.Size(773, 484);
             this.Controls.Add(this.pictureBox3);
             this.Controls.Add(this.btnBatchForm);
             this.Controls.Add(this.panel2);
@@ -450,6 +477,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.picArt)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
+            this.panelImages.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -482,6 +510,8 @@
         private System.Windows.Forms.Button btnManual;
         private System.Windows.Forms.Button btnBatchForm;
         private System.Windows.Forms.PictureBox pictureBox3;
+        private System.Windows.Forms.ListBox imageList;
+        private System.Windows.Forms.Panel panelImages;
     }
 }
 

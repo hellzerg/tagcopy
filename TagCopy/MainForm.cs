@@ -54,6 +54,10 @@ namespace TagCopy
         string TEMP_PATH = Path.GetTempPath() + @"\TagCopy";
 
         string tempImageFile = string.Empty;
+        string[] imageUrls;
+
+        List<byte[]> imageBytesList;
+        List<string> imageFiles;
 
         public MainForm()
         {
@@ -63,6 +67,9 @@ namespace TagCopy
 
             batchOpsForm = new BatchOpsForm();
             aboutForm = new AboutForm();
+
+            imageBytesList = new List<byte[]>();
+            imageFiles = new List<string>();
 
             InitTagLig();
             InitWebClient();
@@ -199,12 +206,21 @@ namespace TagCopy
             TagLib.Id3v2.Tag.ForceDefaultEncoding = true;
         }
 
-        private byte[] GetArtworkFromDiscogs(string term)
+        private void GetArtworkFromDiscogs(string term)
         {
-            string LINK = string.Format("{0}{1}", DISCOGS_URL, term);
-            string imageUrl = client.DownloadString(LINK);
+            imageBytesList.Clear();
 
-            return client.DownloadData(imageUrl);
+            string LINK = string.Format("{0}{1}", DISCOGS_URL, term);
+            string test = client.DownloadString(LINK);
+
+            imageUrls = test.Split('|');
+
+            foreach (string s in imageUrls)
+            {
+                imageBytesList.Add(client.DownloadData(s));
+            }
+
+            //return imageBytesList;
 
             //return null;
 
@@ -300,6 +316,7 @@ namespace TagCopy
                         txtMp3.Text = Path.GetFileNameWithoutExtension(MP3Prototype);
 
                         ShowMP3Tags();
+                        btnSearch.PerformClick();
 
                         return;
                     }
@@ -314,6 +331,7 @@ namespace TagCopy
                         txtMp3.Text = Path.GetFileNameWithoutExtension(MP3Prototype);
 
                         ShowMP3Tags();
+                        btnSearch.PerformClick();
 
                         return;
                     }
@@ -339,6 +357,7 @@ namespace TagCopy
                     txtMp3.Text = Path.GetFileNameWithoutExtension(MP3Prototype);
 
                     ShowMP3Tags();
+                    btnSearch.PerformClick();
                 }
                 else if (file.ToLowerInvariant().EndsWith(JPG_EXTENSION) ||
                     file.ToLowerInvariant().EndsWith(JPG_EXTENSION_2) ||
@@ -366,11 +385,12 @@ namespace TagCopy
         {
             tempImageFile = Path.Combine(TEMP_PATH, Guid.NewGuid().ToString());
             System.IO.File.WriteAllBytes(tempImageFile, image);
+            imageFiles.Add(tempImageFile);
+        }
 
-            using (MemoryStream stream = new MemoryStream(image))
-            {
-                picArt.Image = new Bitmap(stream);
-            }
+        private void ShowArtwork(string image)
+        {
+            picArt.Image = new Bitmap(image);
         }
 
         private void ShowMP3Tags()
@@ -481,16 +501,16 @@ namespace TagCopy
             }
             else
             {
-                if (!string.IsNullOrEmpty(tempImageFile))
+                if (!string.IsNullOrEmpty(imageList.SelectedItem.ToString()))
                 {
-                    if (System.IO.File.Exists(tempImageFile))
+                    if (System.IO.File.Exists(imageList.SelectedItem.ToString()))
                     {
                         TagLib.Id3v2.AttachmentFrame picture = new TagLib.Id3v2.AttachmentFrame
                         {
                             Type = PictureType.FrontCover,
                             Description = "Cover",
                             MimeType = System.Net.Mime.MediaTypeNames.Image.Jpeg,
-                            Data = System.IO.File.ReadAllBytes(tempImageFile),
+                            Data = System.IO.File.ReadAllBytes(imageList.SelectedItem.ToString()),
                             TextEncoding = StringType.Latin1
                         };
 
@@ -563,42 +583,72 @@ namespace TagCopy
             //bool lastFMFoundWithContrib = false;
             //bool spotifyFound = false;
             bool discogsFoundContrib = false;
-            bool discogsFoundOriginal = false;
+            //bool discogsFoundOriginal = false;
 
-            byte[] imageData;
+            //byte[] imageData;
+
+            imageFiles.Clear();
+            imageList.Items.Clear();
 
             try
             {
-                imageData = GetArtworkFromDiscogs(mp3Track.Tag.FirstPerformer + " - " + mp3Track.Tag.Title);
-                LoadImageBytesToUI(imageData);
-                discogsFoundContrib = true;
-                ShowMessage("Discogs: Βρέθηκε artwork");
+                GetArtworkFromDiscogs(mp3Track.Tag.FirstPerformer + " " + mp3Track.Tag.Title);
+
+                foreach (byte[] bytes in imageBytesList)
+                {
+                    LoadImageBytesToUI(bytes);
+                }
+
+                foreach (string s in imageFiles)
+                {
+                    imageList.Items.Add(s);
+                }
+
+                if (imageFiles.Count > 0)
+                {
+                    discogsFoundContrib = true;
+                    ShowMessage("Discogs: Βρέθηκε artwork");
+                    panelImages.Visible = true;
+                }
+                else
+                {
+                    discogsFoundContrib = false;
+                }  
             }
             catch (Exception err)
             {
                 LogError(err, "SearchButton.Click.Discogs");
+                tempImageFile = string.Empty;
                 discogsFoundContrib = false;
+                imageFiles.Clear();
+                imageList.Items.Clear();
             }
+
+            //if (!discogsFoundContrib)
+            //{
+            //    try
+            //    {
+            //        imageData = GetArtworkFromDiscogs(mp3Track.Tag.FirstAlbumArtist + " - " + mp3Track.Tag.Title);
+            //        LoadImageBytesToUI(imageData);
+            //        discogsFoundOriginal = true;
+            //        ShowMessage("Discogs: Βρέθηκε artwork");
+            //    }
+            //    catch (Exception err)
+            //    {
+            //        LogError(err, "SearchButton.Click.Discogs");
+            //        tempImageFile = string.Empty;
+            //        discogsFoundOriginal = false;
+            //    }
+            //}
 
             if (!discogsFoundContrib)
             {
-                try
-                {
-                    imageData = GetArtworkFromDiscogs(mp3Track.Tag.FirstAlbumArtist + " - " + mp3Track.Tag.Title);
-                    LoadImageBytesToUI(imageData);
-                    discogsFoundOriginal = true;
-                    ShowMessage("Discogs: Βρέθηκε artwork");
-                }
-                catch (Exception err)
-                {
-                    LogError(err, "SearchButton.Click.Discogs");
-                    discogsFoundOriginal = false;
-                }
+                ShowError("Δεν βρέθηκε artwork");
             }
 
-            if (!discogsFoundContrib && !discogsFoundOriginal)
+            if (imageList.Items.Count > 0)
             {
-                ShowError("Δεν βρέθηκε artwork");
+                imageList.SelectedIndex = 0;
             }
 
             RenderFinished();
@@ -683,6 +733,11 @@ namespace TagCopy
         private void pictureBox3_Click(object sender, EventArgs e)
         {
             aboutForm.ShowDialog();
+        }
+
+        private void imageList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ShowArtwork(imageList.SelectedItem.ToString());
         }
     }
 }
